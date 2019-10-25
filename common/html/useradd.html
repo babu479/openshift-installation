@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <head>
+        [root@dlp ~]# useradd origin </br>
+        [root@dlp ~]# passwd origin</br>
+        [root@dlp ~]# echo -e 'Defaults:origin !requiretty\norigin ALL = (root) NOPASSWD:ALL' | tee /etc/sudoers.d/openshift</br>
+        [root@dlp ~]# chmod 440 /etc/sudoers.d/openshift</br>
+        # if Firewalld is running, allow SSH</br>
+        [root@dlp ~]# firewall-cmd --add-service=ssh --permanent</br>
+        [root@dlp ~]# firewall-cmd --reload</head>
+</head>
+<body>
+</body>
+</html>

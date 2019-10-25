@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/1999/html" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <title>CentOS 7 : OpenShift 3.6 : Install : Server World</title>
+
+  <link href="./css/navi.css?20180610" media="screen" rel="stylesheet" type="text/css" />
+  <link href="./css/main.css?20180930" media="screen" rel="stylesheet" type="text/css" />
+  <link href="./css/position.css?201710" media="screen" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="./command/popup.js"></script>
+  <script type="text/javascript">
+      hs.graphicsDir = './command/graphics/';
+      hs.outlineType = 'rounded-white';
+      hs.wrapperClassName = 'draggable-header';
+  </script>
+</head>
+<body>
+<div id="contents">
+  <br />
+  <table style="width: 100%; line-height: 1.5; margin-top: 5px; margin-bottom: 10px; margin-left: auto; margin-right: auto;" summary="subject">
+    <tr>
+      <td style="width: 100%; height: 28px; color: #ff3399; padding-left: 50px; background: url(./img/icon.gif) #ffffff no-repeat 0 0;">
+        <div class="subject"><center> <h1>OpenShift Origin 3.9 : Install</h1></center></br>
+        </div>
+      </td>
+    </tr>
+  </table>
+  <table class="base" summary="0">
+    <tr>
+      <td class="num">&nbsp;</td>
+      <td>
+        <div class="block">
+          <p style="color:blue;" >
+          Install OpenShift Origin which is the Open Source version of Red Hat OpenShift.<br />
+          This example is based on the environment like follows.
+          </p>
+        </div>
+        <pre style="font-family: Courier New; font-size: 14px; letter-spacing: 0; line-height: 14px;">
+-----------+-----------------------------------------------------------+---------------------------
+           |3.229.142.253                  |35.172.217.7                   |18.215.250.5
++----------+----------------+      +----------+-------------+      +----------+--------------+
+|[  osmaster.divinu.co.in ] |      |[ osnode1.divinu.co.in] |      | [ osnode02.divinu.co.in] |
+|     (Master Node)         |      |    (Server Node)       |      |    (Server  Node)        |
+|     (Compute Node)        |      |                        |      |                          |
++---------------------------+      +------------------------+      +--------------------------+
+
+</pre>
+      </td>
+    </tr>
+  </table>
+  <table class="base" summary="1">
+    <tr>
+      <td class="num">&nbsp;</td>
+      <td>
+        <hr class="block">
+        <pre style="font-family: Consolas, 'Courier New', Courier, Monaco, monospace; letter-spacing: 0;">
+          <h7>
+            <p style="color:blue;" >
+           There are some System requirements to configure cluster.<br />
+            &nbsp; * Master node has up to 8G memory.<br />
+            &nbsp; * On all nodes, free space on physical volume is required to create a new volume group for Docker Direct LVM.<br />
+            &nbsp; * Docker specific version need to install on all the node : <strong>Docker-1.13.1</strong> <br/>
+            &nbsp; * Install Ansible in master server and configure ssh connectivity for all the node : <strong>Ansible-2.4.3.0</strong></br>
+            &nbsp; * Install Etcd on master node : <strong>Etcd-3.3.11</strong></br>
+            </p>
+        </h7>
+          </pre>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <table class="base" summary="2" >
+    <tr>
+      <td  class="num"></td>
+        <h2>Docker repo creation :</h2>
+      <h3>Docker repo creation in all the servers
+      </h3>
+       <p style="color:blue;" >
+       [dockerrepo]</br>
+        name=Docker Repository</br>
+        baseurl=http://mirror.centos.org/centos/7/extras/x86_64/</br>
+        enabled=1</br>
+        gpgcheck=1</br>
+        gpgkey=http://mirror.centos.org/centos/RPM-GPG-KEY-CentOS-7</br>
+      </p>
+    </tr>
+  </table>
+<table class="base" summary="3" >
+  <tr>
+    <td  class="num"></td>
+    <h2>Install required packages</h2>
+    <h3>Install on Master node
+    </h3>
+    <p style="color:blue;" >
+      [ec2-user@osmaster ~]$ sudo pip install docker==1.9.1 </br>
+      [ec2-user@osmaster ~]$ sudo pip install ansible==2.4.3.0</br>
+      [root@osmaster ~]# yum install etcd
+    </p>
+    <h3>Install on nodes
+    </h3>
+    <p style="color:blue;" >
+      [ec2-user@osmaster ~]$ sudo pip install docker==1.9.1 </br>
+    </p>
+  </tr>
+</table>
+
+<table class="base" summary="4" >
+  <tr>
+    <td  class="num"></td>
+    <h2>edit /etc/hosts in all master and nodes</h2>
+    <h3>vi /etc/hosts with below details
+    </h3>
+    <p style="color:blue;" >
+      [root@osmaster ~]# cat /etc/hosts </br>
+      172.31.76.22 osmaster osmaster.divinu.co.in </br>
+      172.31.77.143 osnode1 osnode1.divinu.co.in</br>
+      172.31.45.193 osnode2 osnode2.divinu.co.in</br>
+    </p>
+  </tr>
+</table>
+<table class="base" summary="5" >
+  <tr>
+    <td  class="num"></td>
+    <h2>Clone Openshift ansible repo</h2>
+    <h3>clone the advance installation playbooks using below commands
+    </h3>
+    <p style="color:blue;" >
+      [ec2-user@osmaster ~]$ git clone -b release-3.9 https://github.com/openshift/openshift-ansible.git </br>
+      [ec2-user@osmaster ~]$ cd openshift-ansible</br>
+      [ec2-user@osmaster ~]$ ls</br>
+      total 548
+      -rw-rw-r--.  1 ec2-user ec2-user   4101 Oct 22 13:58 README.md </br>
+      -rw-rw-r--.  1 ec2-user ec2-user   4342 Oct 22 13:58 README_CONTAINERIZED_INSTALLATION.md</br>
+      -rw-rw-r--.  1 ec2-user ec2-user   7692 Oct 22 13:58 README_CONTAINER_IMAGE.md</br>
+      -rw-rw-r--.  1 ec2-user ec2-user    271 Oct 22 13:58 OWNERS</br>
+      -rw-rw-r--.  1 ec2-user ec2-user  10759 Oct 22 13:58 LICENSE</br>
+      -rw-rw-r--.  1 ec2-user ec2-user   4536 Oct 22 13:58 HOOKS.md</br>
+      -rw-rw-r--.  1 ec2-user ec2-user   1405 Oct 22 13:58 DEPLOYMENT_TYPES.md</br>
+      -rw-rw-r--.  1 ec2-user ec2-user   8179 Oct 22 13:58 CONTRIBUTING.md</br>
+      -rw-rw-r--.  1 ec2-user ec2-user   1887 Oct 22 13:58 BUILD.md</br>
+      -rw-rw-r--.  1 ec2-user ec2-user    143 Oct 22 13:58 conftest.py</br>
+      drwxrwxr-x.  3 ec2-user ec2-user     47 Oct 22 13:58 ansible-profile</br>
+      -rw-rw-r--.  1 ec2-user ec2-user   1303 Oct 22 13:58 ansible.cfg</br>
+      drwxrwxr-x.  2 ec2-user ec2-user    175 Oct 22 13:58 examples</br>
+      drwxrwxr-x.  3 ec2-user ec2-user    161 Oct 22 13:58 docs</br>
+      drwxrwxr-x.  3 ec2-user ec2-user     23 Oct 22 13:58 images</br>
+      drwxrwxr-x.  3 ec2-user ec2-user     65 Oct 22 13:58 hack</br>
+      drwxrwxr-x.  2 ec2-user ec2-user     22 Oct 22 13:58 meta</br>
+      drwxrwxr-x.  3 ec2-user ec2-user   4096 Oct 22 13:58 inventory</br>
+      -rw-rw-r--.  1 ec2-user ec2-user 433369 Oct 22 13:58 openshift-ansible.spec</br>
+      -rw-rw-r--.  1 ec2-user ec2-user    320 Oct 22 13:58 requirements.txt</br>
+      -rw-rw-r--.  1 ec2-user ec2-user    382 Oct 22 13:58 pytest.ini</br>
+      -rw-rw-r--.  1 ec2-user ec2-user    291 Oct 22 13:58 setup.cfg</br>
+      drwxrwxr-x. 92 ec2-user ec2-user   4096 Oct 22 13:58 roles</br>
+      -rw-rw-r--.  1 ec2-user ec2-user    380 Oct 22 13:58 test-requirements.txt</br>
+      -rw-rw-r--.  1 ec2-user ec2-user  16715 Oct 22 13:58 setup.py</br>
+      -rw-rw-r--.  1 ec2-user ec2-user    819 Oct 22 13:58 tox.ini</br>
+      drwxrwxr-x.  4 ec2-user ec2-user     60 Oct 22 13:58 test</br>
+      drwxrwxr-x.  7 ec2-user ec2-user    139 Oct 22 13:58 utils</br>
+      drwxrwxr-x. 28 ec2-user ec2-user   4096 Oct 22 14:08 playbooks</br>
+
+    </p>
+  </tr>
+</table>
+  <table class="term" summary="6">
+    <tr>
+      <td>
+        <div class="color1">
+          <div class="color2"><h2># add follows to the inventory file</h2></div><br />
+          <h3>add the file :- vi inventory.ini</h3>
+          <pre>
+            <p style="color:blue;">
+            <span style="color:black;"># Create an OSEv3 group that contains the masters and nodes groups</span>
+            [OSEv3:children]
+            masters
+            nodes
+            etcd
+            #lb
+            #nfs
+
+            [masters]
+            osmaster openshift_schedulable=true
+            <span style="color:black;">#host group for etcd</span>
+            [etcd]
+            osmaster  openshift_schedulable=true
+
+            <span style="color:black;"># host group for nodes, includes region info</span>
+            [nodes]
+            osmaster  openshift_schedulable=true
+            osnode1 openshift_node_labels="{'region': 'primary','zone':'east'}"  openshift_schedulable=true
+            osnode2 openshift_node_labels="{'region': 'infra','zone':'west'}"  openshift_schedulable=true
+
+            <span style="color:black;"># Set variables common for all OSEv3 hosts</span>
+            [OSEv3:vars]
+
+            <span style="color:black;"># ssh agent.</span>
+            ansible_user=ec2-user
+
+            <span style="color:black;"># user must be configured for passwordless sudo</span>
+
+            ansible_become=yes
+
+              <span style="color:black;"># Debug level for all OpenShift components (Defaults to 2)</span>
+              debug_level=2
+              <span style="color:black;"> #Ip check </span>
+              openshift_ip_check=false
+              <span style="color:black;"> #Web console node</span>
+              openshift_web_console_nodeselector={'region':'primary'}
+
+              <span style="color:black;"># Specify the deployment type. Valid values are origin and openshift-enterprise.</span>
+              openshift_deployment_type=origin
+
+              <span style="color:black;">#openshift_deployment_type=openshift-enterprise</span>
+              openshift_release=v3.9
+
+              <span style="color:black;"># Specify exact version of Docker to configure or upgrade to.</span>
+              docker_version="1.13.1"
+
+              <span style="color:black;"># Specify whether to run Docker daemon with SELinux enabled in containers. Default is True.
+                # Uncomment below to disable; for example if your kernel does not support the
+                # Docker overlay/overlay2 storage drivers with SELinux enabled
+                #openshift_docker_selinux_enabled=False
+                # Skip upgrading Docker during an OpenShift upgrade, leaves the current Docker version alone.</span>
+
+              docker_upgrade=False
+              <span style="color:black;"># Specify exact version of etcd to configure or upgrade to.</span>
+              etcd_version="3.2.18"
+              <span style="color:black;"># If the image for etcd needs to be pulled from anywhere else than registry.access.redhat.com, e.g. in
+              # a disconnected and containerized installation, use osm_etcd_image to specify the image to use:
+              #osm_etcd_image=rhel7/etcd
+                #disble some checks</span>
+              openshift_disable_check=disk_availability,docker_storage,memory_availability,docker_image_availability,package_availability
+
+              <span style="color:black;">#public hostname</span>
+              openshift_public_hostname=osmaster.divinu.co.in
+              openshift_master_default_subdomain=apps.divinu.co.in
+              <span style="color:black;"># Allow all auth</span>
+              openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/.htpasswd'}]
+              <span style="color:black;"> #Metrics installation </span>
+            openshift_metrics_install_metrics=True
+
+              <span style="color:black;">#Prometheus</span>
+              openshift_prometheus_namespace=openshift-metrics
+              openshift_hosted_prometheus_deploy=true
+              openshift_prometheus_node_selector={"region":"infra","zone":"west"}
+              </p>
+</pre>
+        </div>
+        <table class="base" summary="4" >
+          <tr>
+            <td  class="num"></td>
+            <h2>Before running ansible-playbook</h2>
+            <h3>we have to configure route53 with domain and sodomain
+            </h3>
+            <h2>domain and subdomain :</h2><img src="./img/domain_submain_openshift.png" alt="Trulli" width="1000" height="333">
+            <h2>subdomain configuration :</h2><img src="./img/openshift_subdomain.png" alt="Trulli" width="1000" height="333">
+            <h2>domain configuration with subdomain NS(Nameservers) :</h2><img src="./img/domain_openshift.png" alt="Trulli" width="1000" height="333">
+          </tr>
+        </table>
+        <strong>[ec2-user@osmaster ~]$<div class="color1">ansible-playbook -i inventory.ini /home/ec2-user/openshift-ansible/playbooks/deploy_cluster.yml </div></strong><br />
+        <pre style="color:blue;">
+**********************************************************************************************************************************************************************************
+localhost                  : ok=12   changed=0    unreachable=0    failed=0
+osmaster                   : ok=844  changed=288  unreachable=0    failed=0
+osnode1                    : ok=138  changed=33   unreachable=0    failed=0
+osnode2                    : ok=138  changed=33   unreachable=0    failed=0
+
+
+  INSTALLER STATUS ****************************************************************************************************************************************************************************
+Initialization             : Complete (0:00:21)
+Health Check               : Complete (0:00:02)
+etcd Install               : Complete (0:00:54)
+Master Install             : Complete (0:02:50)
+Master Additional Install  : Complete (0:00:56)
+Node Install               : Complete (0:03:05)
+Hosted Install             : Complete (0:01:13)
+Web Console Install        : Complete (0:00:34)
+Metrics Install            : Complete (0:02:22)
+Prometheus Install         : Complete (0:00:52)
+Service Catalog Install    : Complete (0:02:10)
+
+
+</pre>
+        <div class="color2"># show state</div><br />
+        <strong>[ec2-user@osmaster ~]$ <div class="color1">oc get nodes </div></strong><br />
+        <pre style="color:blue;" >
+[ec2-user@osmaster ~]$ oc get nodes
+NAME                            STATUS    ROLES     AGE       VERSION
+ip-172-31-45-193.ec2.internal   Ready     <none>    1d        v1.9.1+a0ce1bc657
+ip-172-31-76-22.ec2.internal    Ready     master    1d        v1.9.1+a0ce1bc657
+ip-172-31-77-143.ec2.internal   Ready     compute   1d        v1.9.1+a0ce1bc657
+
+</pre>
+        <div class="color2"># show state with labels</div><br />
+        <strong>[ec2-user@osmaster ~]$ <div class="color1">oc get nodes --show-labels=true </div></strong><br />
+        <pre style="color:blue;">
+[ec2-user@osmaster ~]$ oc get nodes --show-labels=true
+NAME                            STATUS    ROLES     AGE       VERSION             LABELS
+ip-172-31-45-193.ec2.internal   Ready     <none>    1d        v1.9.1+a0ce1bc657   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/hostname=ip-172-31-45-193.ec2.internal,region=infra,zone=west
+ip-172-31-76-22.ec2.internal    Ready     master    1d        v1.9.1+a0ce1bc657   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/hostname=ip-172-31-76-22.ec2.internal,node-role.kubernetes.io/master=true
+ip-172-31-77-143.ec2.internal   Ready     compute   1d        v1.9.1+a0ce1bc657   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/hostname=ip-172-31-77-143.ec2.internal,node-role.kubernetes.io/compute=true,region=primary,zone=east
+</pre>
+      </td>
+    </tr>
+  </table>
+
+<div id="footer">Copyright &copy; vinod kumar N.
+  <script type="text/javascript" src="./bin/count.js"></script>
+  <img src="../bin/count/count.cgi?1" width="1" height="1" alt="" />
+</div>
+<script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+    try {
+        var pageTracker = _gat._getTracker("UA-11962766-1");
+        pageTracker._trackPageview();
+    } catch(err) {}
+</script>
+</body>
+</html>
